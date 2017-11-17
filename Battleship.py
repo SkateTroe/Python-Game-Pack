@@ -39,20 +39,19 @@ def FillBoard():
 			opt = 1
 			options = ["","","","","",""]
 			print("Please choose direction:")
-#Add Tests for overlapping ships here
-			if int(Coordinates[1])-int(ShipYard[1][i]) > 0:
+			if int(Coordinates[1])-int(ShipYard[1][i]) > 0 and Overlap(row,column,ShipYard[1][i],Map,'U') == False:
 				print(opt, ": Up")
 				options[opt] = "Up"
 				opt = opt + 1
-			if int(Coordinates[1])+int(ShipYard[1][i]) < 11:
+			if int(Coordinates[1])+int(ShipYard[1][i]) < 11 and Overlap(row,column,ShipYard[1][i],Map,'D') == False:
 				print(opt, ": Down")
 				options[opt] = "Down"
 				opt = opt + 1
-			if int(Coordinates[0])-int(ShipYard[1][i]) > 0:
+			if int(Coordinates[0])-int(ShipYard[1][i]) > 0 and Overlap(row,column,ShipYard[1][i],Map,'L') == False:
 				print(opt, ": Left")
 				options[opt] = "Left"
 				opt = opt + 1
-			if int(Coordinates[0])+int(ShipYard[1][i]) < 11:
+			if int(Coordinates[0])+int(ShipYard[1][i]) < 11 and Overlap(row,column,ShipYard[1][i],Map,'R') == False:
 				print(opt, ": Right")
 				options[opt] = "Right"
 				opt = opt + 1
@@ -86,7 +85,42 @@ def FillBoard():
 				go = 0
 		Display(Map)
 
+def Overlap(row,column,Length,Map,Direction):
+	if Direction == 'U':
+		try: 
+			for i in range (0,Length):
+				if Map[row-i][column] != "- ":
+					return True
+			return False
+		except:
+			return False
 
+	if Direction == 'D':
+		try: 
+			for i in range (0,Length):
+				if Map[row+i][column] != "- ":
+					return True
+			return False
+		except:
+			return False
+
+	if Direction == 'L':
+		try: 
+			for i in range (0,Length):
+				if Map[row][column-i] != "- ":
+					return True
+			return False
+		except:
+			return False
+
+	if Direction == 'R':
+		try: 
+			for i in range (0,Length):
+				if Map[row][column+i] != "- ":
+					return True
+			return False
+		except:
+			return False
 		
 def ConvertCoordinates(Point):
 	go = 0
@@ -97,7 +131,7 @@ def ConvertCoordinates(Point):
 			row = 0
 			column = 0
 		elif Point[0].isalpha() == True and Point[1].isdigit() == True:
-			if ('A' <= Point[0] <= 'J' or 'a' <= Point[0] <= 'j') and 1 <= int(Point[1]) <= 10:
+			if ('A' <= Point[0] <= 'J' or 'a' <= Point[0] <= 'j') and 0 <= int(Point[1]) <= 9:
 				row = Alpha2Num(Point[0])
 				column = Point[1]
 				go = 1
@@ -105,7 +139,7 @@ def ConvertCoordinates(Point):
 				row = 0
 				column = 0
 		elif Point[1].isalpha() == True and Point[0].isdigit() == True:
-			if ('A' <= Point[1] <= 'J' or 'a' <= Point[0] <= 'j') and 1 <= int(Point[0]) <= 10:
+			if ('A' <= Point[1] <= 'J' or 'a' <= Point[0] <= 'j') and 0 <= int(Point[0]) <= 9:
 				row = Alpha2Num(Point[0])
 				column = Point[0]
 				go = 1
@@ -116,8 +150,10 @@ def ConvertCoordinates(Point):
 			print("Coordinates should consist of only 1 letter and 1 number.")
 			row = 0
 			column = 0
-		Coordinates = [row,column]
-		return Coordinates	
+	if column == 0:
+		column = 10
+	Coordinates = [row,column]
+	return Coordinates	
 
 def Alpha2Num(Alpha):
 	ref = ['A','B','C','D','E','F','G','H','I','J']
