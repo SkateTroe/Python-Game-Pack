@@ -1,8 +1,11 @@
-import os
+import random
 
 cShipYard = [['A','B','C','D','P'],
 			[5,4,3,3,2],
 			['Aircraft Carrier','Battleship','Cruiser','Destroyer', 'Patrol Ship']]
+
+def cls():
+	print("\n" * 50)
 
 def BlankMap():
 	Map = [['  ','1 ','2 ','3 ','4 ','5 ','6 ','7 ','8 ','9 ','0 '],
@@ -20,27 +23,46 @@ def BlankMap():
 
 def FillBoard():
 
+	#initialize and display the board
 	Map = BlankMap()
-	
 	Display(Map)
+
+	#Repeat 5 times: one for each ship.
 	for i in range (0,5):
-		go = 0
-		while go == 0:
-			Coordinates = [0]
-			while Coordinates[0] == 0:
-				print("Please select starting position for your ", cShipYard[2][i])
-				go2 = 0
-				while go2 == 0:
-					StartPoint = input()
-					Coordinates = ConvertCoordinates(StartPoint)
-					row = int(Coordinates[0])
-					column = int(Coordinates[1])
-					if column == 0:
-						column = 10
-					if Map[row][column] != '- ':
-						print("You already have a ship there!", Map[row][column])
-					else:
-						go2 = 1
+		
+		#This while loop basically contains each instance of the for loop it's
+		#	nested in. IsFinalPlacement will be set to true if and only if all
+		#	other tests are passed and the user confirms their choice.
+		IsFinalPlacement = False
+		
+		while IsFinalPlacement == False:
+			#cShipYard contains data on the ships in play. Row 2 contains ship names.
+			print("Please select starting position for your", cShipYard[2][i])
+
+			#Takes standard Battleship input--B4, J8, etc--and converts into numeric
+			#	coordinates. Then tests that a ship has not already been placed at
+			#	those coordinates.
+			IsSpaceAvailable = False
+			while IsSpaceAvailable == False:
+				StartPoint = input()
+				Coordinates = ConvertCoordinates(StartPoint)
+				
+				row = int(Coordinates[0])
+				column = int(Coordinates[1])
+				
+				#Hard to have a X10 option, so we're calling it X0.
+				if column == 0:
+					column = 10
+
+				if Map[row][column] != '- ':
+					print("You already have a ship there!")
+				else:
+						IsSpaceAvailable = True
+			#Dynamic menu, only offers legal options, and always lists options
+			#	numerically, without gaps. opt controls the option numbers, incrementing
+			#	whenever a new option is added to the menu.
+			#
+			#options[] is an array of keywords that will assigned to position "opt"
 			opt = 1
 			options = ["","","","","",""]
 			print("Please choose direction:")
@@ -64,31 +86,109 @@ def FillBoard():
 			print(opt, ": Change Coordinates")
 			print()
 
+			#Test if the input choice is among the valid options. If not, an error will be thrown and
+			#	caught, and the loop will repeat. 
+			IsValidChoice = False
 
+			while IsValidChoice == False:
+				try:
+					Direction = int(input("Choice:   "))
+					print()
+				
+					if options[Direction] == "Up":
+						for j in range (0,cShipYard[1][i]):
+							Map[row - j][column] = cShipYard[0][i] + " "
+							IsValidChoice = True
+							IsFinalPlacement = True
 
-			Direction = int(input("Choice:   "))
-			print()
-			if Direction > opt or Direction < 1:
-				print("Please choose a listed option")
-			elif options[Direction] == "Up":
-				for j in range (0,cShipYard[1][i]):
-					Map[row - j][column] = cShipYard[0][i] + " "
-					go = 1
-			elif options[Direction] == "Down":
-				for j in range (0,cShipYard[1][i]):
-					Map[row + j][column] = cShipYard[0][i] + " "
-					go = 1
-			elif options[Direction] == "Left":
-				for j in range (0,cShipYard[1][i]):
-					Map[row][column - j] = cShipYard[0][i] + " "
-					go = 1
-			elif options[Direction] == "Right":
-				for j in range (0,cShipYard[1][i]):
-					Map[row][column + j] = cShipYard[0][i] + " "
-					go = 1
-			else:
-				go = 0
+					elif options[Direction] == "Down":
+						for j in range (0,cShipYard[1][i]):
+							Map[row + j][column] = cShipYard[0][i] + " "
+							IsValidChoice = True
+							IsFinalPlacement = True
+
+					elif options[Direction] == "Left":
+						for j in range (0,cShipYard[1][i]):
+							Map[row][column - j] = cShipYard[0][i] + " "
+							IsValidChoice = True
+							IsFinalPlacement = True
+
+					elif options[Direction] == "Right":
+						for j in range (0,cShipYard[1][i]):
+							Map[row][column + j] = cShipYard[0][i] + " "
+							IsValidChoice = True
+							IsFinalPlacement = True
+
+					else:
+						IsValidChoice = True
+						IsFinalPlacement = False
+				except:
+					print("Please choose a option between 1 and ", opt)
 		Display(Map)
+	return Map
+
+def AutoFill():
+
+	#Accept while loop allows user to reject a random board.
+	Accept = 'N'
+	while Accept != 'Y':
+		Map = BlankMap()
+
+		for i in range (5):
+			#ValidChoice ensures that each ship is properly placed.
+			IsValidChoice = False
+			while IsValidChoice == False:
+
+				#SpotEmpty checks that the starting poitn is valid for each ship.
+				IsSpotEmpty = False
+				while IsSpotEmpty == False:
+					row = random.randint(1,10)
+					col = random.randint(1,10)
+
+					if Map[row][col] == '- ':
+						IsSpotEmpty = True
+
+				options = ["","","","",""]
+				opt = 1
+
+				if row-int(cShipYard[1][i]) > 0 and Overlap(row,col,cShipYard[1][i],Map,'U') == False:
+						options[opt] = "Up"
+						opt = opt + 1
+				if row+int(cShipYard[1][i]) < 11 and Overlap(row,col,cShipYard[1][i],Map,'D') == False:
+						options[opt] = "Down"
+						opt = opt + 1
+				if col-int(cShipYard[1][i]) > 0 and Overlap(row,col,cShipYard[1][i],Map,'L') == False:
+						options[opt] = "Left"
+						opt = opt + 1
+				if col+int(cShipYard[1][i]) < 11 and Overlap(row,col,cShipYard[1][i],Map,'R') == False:
+						options[opt] = "Right"
+						opt = opt + 1
+
+				Direction = random.randint(1,opt)
+						
+				if options[Direction] == "Up":
+					for j in range (0,cShipYard[1][i]):
+						Map[row - j][col] = cShipYard[0][i] + " "
+						IsValidChoice = True
+
+				elif options[Direction] == "Down":
+					for j in range (0,cShipYard[1][i]):
+						Map[row + j][col] = cShipYard[0][i] + " "
+						IsValidChoice = True
+
+				elif options[Direction] == "Left":
+					for j in range (0,cShipYard[1][i]):
+						Map[row][col - j] = cShipYard[0][i] + " "
+						IsValidChoice = True
+
+				elif options[Direction] == "Right":
+					for j in range (0,cShipYard[1][i]):
+						Map[row][col + j] = cShipYard[0][i] + " "
+						IsValidChoice = True
+
+		Display(Map)
+		Accept = input("Type Y to accept, N to rebuild.")
+
 	return Map
 
 def Overlap(row,column,Length,Map,Direction):
@@ -140,15 +240,21 @@ def ConvertCoordinates(Point):
 			if ('A' <= Point[0] <= 'J' or 'a' <= Point[0] <= 'j') and 0 <= int(Point[1]) <= 9:
 				row = Alpha2Num(Point[0])
 				column = Point[1]
-				go = 1
+				if row == 0:
+					print("Please choose a valid letter")
+				else:
+					go = 1
 			else:
 				row = 0
 				column = 0
-		elif Point[1].isalpha() == True and Point[0].isdigit() == True:
-			if ('A' <= Point[1] <= 'J' or 'a' <= Point[0] <= 'j') and 0 <= int(Point[0]) <= 9:
-				row = Alpha2Num(Point[0])
+		elif Point[0].isdigit() == True and Point[1].isalpha() == True:
+			if ('A' <= Point[1] <= 'J' or 'a' <= Point[1] <= 'j') and 0 <= int(Point[0]) <= 9:
+				row = Alpha2Num(Point[1])
 				column = Point[0]
-				go = 1
+				if row == 0:
+					print("Please choose a valid letter")
+				else:
+					go = 1
 			else:
 				row = 0
 				column = 0
@@ -156,15 +262,20 @@ def ConvertCoordinates(Point):
 			print("Coordinates should consist of only 1 letter and 1 number.")
 			row = 0
 			column = 0
+		if go == 0:
+			Point = input("Please input new point: ")
 	Coordinates = [row,column]
 	return Coordinates	
 
 def Alpha2Num(Alpha):
 	ref = ['A','B','C','D','E','F','G','H','I','J']
 	ref2 = ['a','b','c','d','e','f','g','h','i','j']
-	for i in range (0,10):
-		if ref[i] == Alpha or ref2[i] == Alpha:
-			return i + 1
+	try:
+		for i in range (0,10):
+			if ref[i] == Alpha or ref2[i] == Alpha:
+				return i + 1
+	except:
+		return 0
 
 def Display(Map):
 
@@ -175,7 +286,7 @@ def Display(Map):
 
 def LaunchAttack(Row,Col,Map):
 
-	Target = Map[Row,Col]
+	Target = Map[Row][Col]
 	if Target == "- ":
 		Damage = ["o ","False",]
 	elif Target == "A ":
@@ -193,26 +304,43 @@ def LaunchAttack(Row,Col,Map):
 
 def FriendMode():
 
-	os.system("cls")
+	cls()
 
 	Player = 1
 	winner = False
 	ShipYard1 = ShipYard2 = cShipYard
 	score1 = score2 = 17
 
-	print("Player 1: Place your ships.")
-	Board1 = FillBoard()
+	#Make AutoFill() vs FillBoard() a choice
+	print("Player 1:")
+	print("1: Place your ships manually.")
+	print("2: Automatically generate map.")
+	print()
+	
+	FillChoice = int(input("Choice: "))
+	if FillChoice == 1:
+		Board1 = FillBoard()
+	else
+		Board1 = AutoFill()
 
-	os.system("cls")
+	cls()
 
-	print("Player 2: Place your ships")
-	Board2 = FillBoard()
+	#Make AutoFill() vs FillBoard() a choice
+	print("Player 1:")
+	print("1: Place your ships manually.")
+	print("2: Automatically generate map.")
+	
+	FillChoice = int(input("Choice: "))
+	if FillChoice == 1:
+		Board1 = FillBoard()
+	else
+		Board1 = AutoFill()
 
-	os.system("cls")
+	cls()
 
 
-	Radar1 = BlankMap
-	Radar2 = BlankMap
+	Radar1 = BlankMap()
+	Radar2 = BlankMap()
 
 	while winner == False:
 
@@ -222,127 +350,153 @@ def FriendMode():
 			print("--------------------")
 			print()
 			input("Press Enter to reveal board")
-			os.system("cls")
+			cls()
 			print("--------------------")
 			print("      PLAYER 1      ")
 			print("--------------------")
 			print()
 			print("RADAR")
+			print("______________________")
 			Display(Radar1)
 			print()
 			print()
 			print("YOUR SHIPS")
+			print("______________________")
 			Display(Board1)
 			print()
-			Attack = input("Input Attack Coordinates: ")
+			IsSpotEmpty = False
 
-			AttackCoord = ConvertCoordinates(Attack)
+			while IsSpotEmpty == False:
+				Attack = input("Input Attack Coordinates: ")
 
-			AtRow = int(AttackCoord[0])
-			AtCol = int(AttackCoord[1])
-			if AtCol == 0:
-				AtCol = 10
+				AttackCoord = ConvertCoordinates(Attack)
+
+				AtRow = int(AttackCoord[0])
+				AtCol = int(AttackCoord[1])
+				if AtCol == 0:
+					AtCol = 10
+				if Radar1[AtRow][AtCol] == "- ":
+					IsSpotEmpty = True
+				else:
+					print("You have already attacked those coordinates.")
 
 			Results = LaunchAttack(AtRow,AtCol,Board2)
 
 			Radar1[AtRow][AtCol] = Results[0]
 
-			os.system("cls")
+			cls()
 			print("--------------------")
 			print("      PLAYER 1      ")
 			print("--------------------")
 			print()
 			print("RADAR")
+			print("______________________")
 			Display(Radar1)
 			print()
 			print()
 			print("YOUR SHIPS")
+			print("______________________")
 			Display(Board1)
 			print()
 
 			if Results[1] == "True":
-				ShipYard1[1][Results[2]] = ShipYard1[1][Results[2]] - 1
-				if ShipYard1[1][Results[2]] == 0:
-					print("You sank their ", ShipYard[2][Results[2]], "!!")
+				ShipYard2[1][Results[2]] = ShipYard2[1][Results[2]] - 1
+				if ShipYard2[1][Results[2]] == 0:
+					print("You sank their ", cShipYard[2][Results[2]], "!!")
 				else:
 					print("Hit!!")
+				Board2[AtRow][AtCol] = "X "
 				score2 = score2 - 1
 			else:
 				print("Miss")
+				Board2[AtRow][AtCol] = "o "
 			print()
 			print()
 
 			input("Press Enter to end turn")
-			print()
-			print()
+			cls()
 
-			input("Press Enter to end turn")
 		else:
 			print("--------------------")
 			print("      PLAYER 2      ")
 			print("--------------------")
 			print()
 			input("Press Enter to reveal board")
-			os.system("cls")
+			cls()
 			print("--------------------")
 			print("      PLAYER 2      ")
 			print("--------------------")
 			print()
 			print("RADAR")
+			print("______________________")
 			Display(Radar2)
 			print()
 			print()
 			print("YOUR SHIPS")
+			print("______________________")
 			Display(Board2)
 			print()
-			Attack = input("Input Attack Coordinates: ")
 
-			AttackCoord = ConvertCoordinates(Attack)
+			IsSpotEmpty = False
 
-			AtRow = int(AttackCoord[0])
-			AtCol = int(AttackCoord[1])
-			if AtCol == 0:
-				AtCol = 10
+			while IsSpotEmpty == False:
+				Attack = input("Input Attack Coordinates: ")
+
+				AttackCoord = ConvertCoordinates(Attack)
+
+				AtRow = int(AttackCoord[0])
+				AtCol = int(AttackCoord[1])
+				if AtCol == 0:
+					AtCol = 10
+				if Radar2[AtRow][AtCol] == "- ":
+					IsSpotEmpty = True
+				else:
+					print("You have already attacked those coordinates.")
 
 			Results = LaunchAttack(AtRow,AtCol,Board1)
 
 			Radar2[AtRow][AtCol] = Results[0]
 
-			os.system("cls")
+			cls()
 			print("--------------------")
 			print("      PLAYER 2      ")
 			print("--------------------")
 			print()
 			print("RADAR")
+			print("______________________")
 			Display(Radar2)
 			print()
 			print()
 			print("YOUR SHIPS")
+			print("______________________")
 			Display(Board2)
 			print()
 
 			if Results[1] == "True":
 				ShipYard1[1][Results[2]] = ShipYard1[1][Results[2]] - 1
 				if ShipYard1[1][Results[2]] == 0:
-					print("You sank their ", ShipYard[2][Results[2]], "!!")
+					print("You sank their ", cShipYard[2][Results[2]], "!!")
 				else:
 					print("Hit!!")
-				Score1 = Score1 - 1
+				Board1[AtRow][AtCol] = "X "
+				score1 = score1 - 1
 			else:
 				print("Miss")
+				Board1[AtRow][AtCol] = "o "
 			print()
 			print()
 			input("Press Enter to end turn")
+			cls()
 
 		if score1 == 0 or score2 == 0:
 			winner = 1
 		else:
-			if player == 1:
-				player = 2
+			if Player == 1:
+				Player = 2
 			else:
-				player = 1
+				Player = 1
 
-	print("Player ", player, " wins!!")
+	print("Player ", Player, " wins!!")
 
 
 
